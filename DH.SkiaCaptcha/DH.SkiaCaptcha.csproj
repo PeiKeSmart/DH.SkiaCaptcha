@@ -44,11 +44,24 @@
 
   <ItemGroup>
     <PackageReference Include="DH.NCore" Version="4.24.2026.726-beta0932" />
+    <PackageReference Include="Pek.VirtualFileSystem" Version="4.22.2026.715-beta0759" />
     <PackageReference Include="SkiaSharp" Version="4.151.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.301">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="fonts\*.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="fonts\*.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="fonts\*.*" />
   </ItemGroup>
 
   <ItemGroup>

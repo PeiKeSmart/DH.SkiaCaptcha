@@ -1,4 +1,5 @@
 <Solution>
+  <Folder Name="/.tmp_test/" />
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path=".github/workflows/publish-beta.yml" />

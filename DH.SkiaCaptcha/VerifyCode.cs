@@ -430,18 +430,14 @@ public class VerifyCode
     /// <summary>
     /// 创建画笔
     /// </summary>
-    /// <param name="color"></param>
-    /// <param name="fontSize"></param>
-    /// <returns></returns>
-    private SKPaint CreatePaint(SKColor color, float fontSize)
+    /// <param name="color">画笔颜色</param>
+    /// <returns>画笔</returns>
+    private SKPaint CreatePaint(SKColor color)
     {
-        SkiaSharp.SKTypeface font = SKTypeface.FromFamilyName(null, SKFontStyleWeight.SemiBold, SKFontStyleWidth.ExtraCondensed, SKFontStyleSlant.Upright);
         SKPaint paint = new SKPaint();
 
         paint.IsAntialias = true;
         paint.Color = color;
-        paint.Typeface = font;
-        paint.TextSize = fontSize;
         return paint;
     }
 
@@ -453,6 +449,9 @@ public class VerifyCode
     /// <returns></returns>
     public Byte[] GetVerifyCodeImage(Int32 lineNum = 1, Int32 lineStrookeWidth = 1)
     {
+        // 未设置验证码文本时自动生成，避免空引用
+        if (SetVerifyCodeText.IsNullOrWhiteSpace()) GetCodeText();
+
         // 创建Bitmap位图
         using (SKBitmap image2d = new SKBitmap(SetWidth, SetHeight, SKColorType.Bgra8888, SKAlphaType.Premul))
         {
@@ -471,33 +470,35 @@ public class VerifyCode
                 AddBackgroundNoisePoint(image2d, canvas);
 
                 // 将文字写到画布上
-                var drawStyle = new SKPaint();
+                using var drawStyle = new SKPaint();
                 drawStyle.IsAntialias = true;
-                drawStyle.TextSize = SetFontSize;
                 char[] chars = SetVerifyCodeText.ToCharArray();
 
-                for (Int32 i = 0; i < chars.Length; i++)
+                // 使用内嵌字体，避免部署环境缺少系统字体导致验证码文字空白
+                var typeface = DefaultFontFamilys.Instance.GetFontFamily(SetFontFamily);
+
+                using (var font = new SKFont(typeface, SetFontSize))
                 {
-                    var font = SKTypeface.FromFamilyName(SetFontFamily, SKFontStyleWeight.SemiBold, SKFontStyleWidth.ExtraCondensed, SKFontStyleSlant.Upright);
+                    for (Int32 i = 0; i < chars.Length; i++)
+                    {
+                        // 转动的度数
+                        var angle = objRandom.Next(-30, 30);
 
-                    // 转动的度数
-                    var angle = objRandom.Next(-30, 30);
+                        canvas.Translate(12, 12);
 
-                    canvas.Translate(12, 12);
+                        float px = i * SetFontSize;
+                        float py = SetHeight / 2;
 
-                    float px = (i) * SetFontSize;
-                    float py = SetHeight / 2;
+                        canvas.RotateDegrees(angle, px, py);
 
-                    canvas.RotateDegrees(angle, px, py);
+                        drawStyle.Color = SetFontColor;
 
-                    drawStyle.Typeface = font;
-                    drawStyle.Color = SetFontColor;
+                        // 写字 (i + 1)* 16, 28
+                        canvas.DrawText(chars[i].ToString(), px, py, SKTextAlign.Left, font, drawStyle);
 
-                    // 写字 (i + 1)* 16, 28
-                    canvas.DrawText(chars[i].ToString(), px, py, drawStyle);
-
-                    canvas.RotateDegrees(-angle, px, py);
-                    canvas.Translate(-12, -12);
+                        canvas.RotateDegrees(-angle, px, py);
+                        canvas.Translate(-12, -12);
+                    }
                 }
 
                 //画随机干扰线
@@ -544,7 +545,7 @@ public class VerifyCode
     /// <param name="objGraphics"></param>
     private void AddBackgroundNoisePoint(SKBitmap objBitmap, SKCanvas objGraphics)
     {
-        using (SKPaint objPen = CreatePaint(SKColors.Azure, 0))
+        using (SKPaint objPen = CreatePaint(SKColors.Azure))
         {
             for (var i = 0; i < objBitmap.Width * 2; i++)
             {
@@ -561,7 +562,7 @@ public class VerifyCode
                 var y1 = objRandom.Next(objBitmap.Height);
                 var y2 = objRandom.Next(objBitmap.Height);
 
-                objGraphics.DrawLine(x1, y1, x2, y2, CreatePaint(SKColors.Silver, 0));
+                objGraphics.DrawLine(x1, y1, x2, y2, CreatePaint(SKColors.Silver));
             }
         }
     }
